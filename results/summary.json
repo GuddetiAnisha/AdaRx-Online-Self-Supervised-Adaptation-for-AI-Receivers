@@ -1,0 +1,26 @@
+{
+  "static": {
+    "mean_ber": 0.19980759980759982,
+    "mean_bler": 0.6583333333333333,
+    "mean_throughput": 0.3416666666666667,
+    "total_update_ms": 0.0,
+    "final_weight_drift": 0.0,
+    "adaptation_frames_after_first_shift": null
+  },
+  "pilot": {
+    "mean_ber": 0.17614237614237613,
+    "mean_bler": 0.6416666666666667,
+    "mean_throughput": 0.35833333333333334,
+    "total_update_ms": 4.734203999305464,
+    "final_weight_drift": 0.2859909226112495,
+    "adaptation_frames_after_first_shift": null
+  },
+  "hybrid": {
+    "mean_ber": 0.17306397306397306,
+    "mean_bler": 0.6444444444444445,
+    "mean_throughput": 0.35555555555555557,
+    "total_update_ms": 5.056315001183975,
+    "final_weight_drift": 0.2594731660518288,
+    "adaptation_frames_after_first_shift": null
+  }
+}

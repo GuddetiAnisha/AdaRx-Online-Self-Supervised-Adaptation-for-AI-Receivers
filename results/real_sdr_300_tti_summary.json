@@ -1,0 +1,44 @@
+{
+  "dataset": "rikluost/sdr_ofdm_dataset_v1",
+  "source_train_ttis": 100,
+  "evaluation_ttis": 300,
+  "seed": 7,
+  "pilot_equalization": "Ypilot/Xpilot with complex linear interpolation over 102 active bins",
+  "adaptation": "high-confidence centroid self-training; no evaluation labels used",
+  "adapt_confidence": 0.85,
+  "summary": {
+    "raw_static": {
+      "mean_ber": 0.4602678571428571,
+      "mean_ser": 0.8578000000000001,
+      "mean_bler": 1.0,
+      "mean_throughput": 0.0,
+      "mean_sinr_db": 14.037333333333333,
+      "mean_update_samples": 0.0,
+      "total_update_ms": 0.0,
+      "final_weight_drift": 0.0,
+      "evaluated_ttis": 300
+    },
+    "equalized_static": {
+      "mean_ber": 0.08999583333333333,
+      "mean_ser": 0.24125952380952378,
+      "mean_bler": 0.6618939393939394,
+      "mean_throughput": 0.33810606060606063,
+      "mean_sinr_db": 14.037333333333333,
+      "mean_update_samples": 0.0,
+      "total_update_ms": 0.0,
+      "final_weight_drift": 0.0,
+      "evaluated_ttis": 300
+    },
+    "equalized_adapted": {
+      "mean_ber": 0.09038809523809523,
+      "mean_ser": 0.24222857142857146,
+      "mean_bler": 0.6637121212121212,
+      "mean_throughput": 0.3362878787878788,
+      "mean_sinr_db": 14.037333333333333,
+      "mean_update_samples": 157.32,
+      "total_update_ms": 98.67639999720268,
+      "final_weight_drift": 0.1671788542915189,
+      "evaluated_ttis": 300
+    }
+  }
+}

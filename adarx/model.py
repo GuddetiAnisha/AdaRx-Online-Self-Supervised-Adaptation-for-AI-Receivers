@@ -6,11 +6,19 @@ def softmax(logits):
     return e / e.sum(axis=1, keepdims=True)
 
 class NeuralReceiver:
-    """Two-layer MLP classifier with explicit NumPy backpropagation."""
-    def __init__(self, seed=0, hidden=24):
+    """Two-layer MLP classifier with explicit NumPy backpropagation.
+
+    Defaults remain compatible with the original 4-class synthetic QPSK demo.
+    For the public SDR OFDM dataset use n_classes=16.
+    """
+    def __init__(self, seed=0, hidden=24, input_dim=4, n_classes=4):
         rng = np.random.default_rng(seed)
-        self.w1 = rng.normal(0, 0.25, (4, hidden)); self.b1 = np.zeros(hidden)
-        self.w2 = rng.normal(0, 0.25, (hidden, 4)); self.b2 = np.zeros(4)
+        self.input_dim = int(input_dim)
+        self.n_classes = int(n_classes)
+        self.w1 = rng.normal(0, 0.25, (self.input_dim, hidden))
+        self.b1 = np.zeros(hidden)
+        self.w2 = rng.normal(0, 0.25, (hidden, self.n_classes))
+        self.b2 = np.zeros(self.n_classes)
         self.anchor = self.state()
 
     def state(self):
@@ -27,14 +35,17 @@ class NeuralReceiver:
         return self.forward(x)[1].argmax(axis=1)
 
     def update(self, x, y, lr=0.02, steps=1, anchor_strength=0.0, weights=None):
-        if len(x) == 0: return 0.0
+        if len(x) == 0:
+            return 0.0
         y = np.asarray(y, dtype=int)
+        if np.any((y < 0) | (y >= self.n_classes)):
+            raise ValueError("labels outside receiver class range")
         weights = np.ones(len(x)) if weights is None else np.asarray(weights)
         last = 0.0
         for _ in range(steps):
             h, p = self.forward(x)
             last = float(-np.mean(weights * np.log(p[np.arange(len(y)), y] + 1e-9)))
-            grad = p
+            grad = p.copy()
             grad[np.arange(len(y)), y] -= 1
             grad *= (weights / max(1, len(y)))[:, None]
             gw2 = h.T @ grad + anchor_strength * (self.w2 - self.anchor[2])
@@ -42,11 +53,12 @@ class NeuralReceiver:
             gh = (grad @ self.w2.T) * (1 - h * h)
             gw1 = x.T @ gh + anchor_strength * (self.w1 - self.anchor[0])
             gb1 = gh.sum(0) + anchor_strength * (self.b1 - self.anchor[1])
-            self.w1 -= lr * gw1; self.b1 -= lr * gb1
-            self.w2 -= lr * gw2; self.b2 -= lr * gb2
+            self.w1 -= lr * gw1
+            self.b1 -= lr * gb1
+            self.w2 -= lr * gw2
+            self.b2 -= lr * gb2
         return last
 
     def drift(self):
         now = self.state()
         return float(np.sqrt(sum(np.sum((a-b)**2) for a,b in zip(now, self.anchor))))
-

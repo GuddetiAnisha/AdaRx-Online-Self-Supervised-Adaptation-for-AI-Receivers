@@ -4,6 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 import numpy as np
 from .channel import features
+from .equalization import equalized_payload, channel_quality_features
 
 FFT_SIZE = 128
 N_SYMBOLS = 14
@@ -13,15 +14,13 @@ DC_LOCAL_INDEX = 51
 PILOT_SYMBOL_INDEX = 2
 PILOT_LOCAL_INDICES = tuple(list(range(0, 97, 8)) + [101])
 
-
 def bits_to_class(bits: np.ndarray) -> np.ndarray:
     bits = np.asarray(bits, dtype=int)
     if bits.ndim != 2 or bits.shape[1] != 4:
         raise ValueError("expected labels with shape [N,4]")
     if np.any((bits != 0) & (bits != 1)):
         raise ValueError("bit labels must contain only 0/1")
-    return bits @ np.array([8, 4, 2, 1], dtype=int)
-
+    return bits @ np.array([8,4,2,1], dtype=int)
 
 def payload_iq_from_tti(pdsch_iq: np.ndarray) -> np.ndarray:
     iq = np.asarray(pdsch_iq)
@@ -42,22 +41,28 @@ def payload_iq_from_tti(pdsch_iq: np.ndarray) -> np.ndarray:
         raise RuntimeError(f"payload mask produced {len(out)} symbols, expected 1400")
     return out
 
-
 def sample_to_frame(pdsch_iq, labels, sinr, frame_id=0):
-    rx = payload_iq_from_tti(np.asarray(pdsch_iq))
+    raw_rx = payload_iq_from_tti(np.asarray(pdsch_iq))
+    eq_rx, h = equalized_payload(np.asarray(pdsch_iq))
     bit_labels = np.asarray(labels)
     if bit_labels.shape != (1400, 4):
         raise ValueError(f"expected label shape (1400,4), got {bit_labels.shape}")
     y = bits_to_class(bit_labels)
     sinr_value = float(np.asarray(sinr).reshape(-1)[0])
+    raw_x = features(raw_rx)
+    eq_x = features(eq_rx)
     return {
         "frame_id": int(frame_id),
-        "rx": rx,
-        "x": features(rx),
+        "raw_rx": raw_rx,
+        "eq_rx": eq_rx,
+        "raw_x": raw_x,
+        "eq_x": eq_x,
+        "x": eq_x,
+        "rx": eq_rx,
         "y": y,
         "sinr_db": sinr_value,
+        **channel_quality_features(h),
     }
-
 
 def load_sdr_pth(path: str | Path, max_ttis: int | None = None):
     import torch
